@@ -19,6 +19,11 @@ const updateClientsViewTimers = (game) => {
   game.player2Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:2', game.gameState));
 };
 
+const updateClientsViewScores = (game) => {
+  game.player1Socket.emit('game.score', GameService.send.forPlayer.gameScore('player:1', game.gameState));
+  game.player2Socket.emit('game.score', GameService.send.forPlayer.gameScore('player:2', game.gameState));
+};
+
 const updateClientsViewDecks = (game) => {
   setTimeout(() => {
     game.player1Socket.emit('game.deck.view-state', GameService.send.forPlayer.deckViewState('player:1', game.gameState));
@@ -67,6 +72,7 @@ const createGame = (player1Socket, player2Socket) => {
 
   // we update views
   updateClientsViewTimers(games[gameIndex]);
+  updateClientsViewScores(games[gameIndex]);
   updateClientsViewDecks(games[gameIndex]);
   updateClientsViewGrid(games[gameIndex]);
 
@@ -240,6 +246,7 @@ io.on('connection', socket => {
     games[gameIndex].player1Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:1', games[gameIndex].gameState));
     games[gameIndex].player2Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:2', games[gameIndex].gameState));
 
+    
     updateClientsViewDecks(games[gameIndex]);
     updateClientsViewChoices(games[gameIndex]);
     updateClientsViewGrid(games[gameIndex]);

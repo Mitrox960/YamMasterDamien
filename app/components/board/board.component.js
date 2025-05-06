@@ -6,6 +6,8 @@ import PlayerTimer from './timers/player-timer.component'
 import OpponentTimer from './timers/opponent-timer.component'
 import PlayerDeck from "./decks/player-deck.component";
 import OpponentDeck from "./decks/opponent-deck.component";
+import PlayerScore from "./scores/player-score.component";
+import OpponentScore from "./scores/opponent-score.component";
 import Choices from "./choices/choices.component";
 import Grid from "./grid/grid.component";
 
@@ -15,7 +17,7 @@ const OpponentInfos = () => {
       <Text>Opponent infos</Text>
     </View>
   );
-};
+};/*
 
 const OpponentScore = () => {
   return (
@@ -24,7 +26,7 @@ const OpponentScore = () => {
     </View>
   );
 };
-
+*/
 const PlayerInfos = () => {
   return (
     <View style={styles.playerInfosContainer}>
@@ -32,7 +34,7 @@ const PlayerInfos = () => {
     </View>
   );
 };
-
+/*
 const PlayerScore = () => {
 
   return (
@@ -41,7 +43,7 @@ const PlayerScore = () => {
     </View>
   );
 };
-
+*/
 const Board = ({ gameViewState}) => {
   return (
     <View style={styles.container}>

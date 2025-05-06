@@ -140,6 +140,12 @@ const GameService = {
                 return { playerTimer: playerTimer, opponentTimer: opponentTimer };
             },
 
+            gameScore: (playerKey, gameState) => {
+                const playerScore = gameState.currentTurn === playerKey ? gameState.player1Score : 0;
+                const opponentScore = gameState.currentTurn === playerKey ? 0 : gameState.player2Score;
+                return { playerScore: playerScore, opponentScore: opponentScore };
+            },
+
             deckViewState: (playerKey, gameState) => {
                 const deckViewState = {
                     displayPlayerDeck: gameState.currentTurn === playerKey,
