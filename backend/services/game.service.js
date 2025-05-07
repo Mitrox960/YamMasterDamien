@@ -110,6 +110,14 @@ const GameService = {
         }
     },
 
+    addPointToPlayer(gameState, playerKey, points = 1) {
+        if (playerKey === 'player:1') {
+            gameState.player1Score += points;
+        } else if (playerKey === 'player:2') {
+            gameState.player2Score += points;
+        }
+      },
+      
     send: {
         forPlayer: {
             viewGameState: (playerKey, game) => {
@@ -141,11 +149,19 @@ const GameService = {
             },
 
             gameScore: (playerKey, gameState) => {
-                const playerScore = gameState.currentTurn === playerKey ? gameState.player1Score : 0;
-                const opponentScore = gameState.currentTurn === playerKey ? 0 : gameState.player2Score;
-                return { playerScore: playerScore, opponentScore: opponentScore };
-            },
-
+                if (playerKey === 'player:1') {
+                  return {
+                    playerScore: gameState.player1Score,
+                    opponentScore: gameState.player2Score
+                  };
+                } else {
+                  return {
+                    playerScore: gameState.player2Score,
+                    opponentScore: gameState.player1Score
+                  };
+                }
+              },
+              
             deckViewState: (playerKey, gameState) => {
                 const deckViewState = {
                     displayPlayerDeck: gameState.currentTurn === playerKey,
@@ -298,6 +314,69 @@ const GameService = {
     },
 
     grid: {
+        
+        checkAlignmentsAndScore(grid, playerKey) {
+            const directions = [
+                { x: 1, y: 0 },  // Horizontal
+                { x: 0, y: 1 },  // Vertical
+                { x: 1, y: 1 },  // Diagonale bas droite
+                { x: 1, y: -1 }  // Diagonale haut droite
+            ];
+        
+            const numRows = grid.length;
+            const numCols = grid[0].length;
+            let points = 0;
+            const alreadyCounted = new Set(); // Pour éviter de recompter les mêmes alignements
+        
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    if (grid[row][col].owner !== playerKey) continue;
+        
+                    for (const { x: dx, y: dy } of directions) {
+                        let count = 1;
+                        let r = row + dy;
+                        let c = col + dx;
+        
+                        // on saute si on n’est pas le début de l’alignement
+                        const prevR = row - dy;
+                        const prevC = col - dx;
+                        if (
+                            prevR >= 0 && prevR < numRows &&
+                            prevC >= 0 && prevC < numCols &&
+                            grid[prevR][prevC].owner === playerKey
+                        ) {
+                            continue;
+                        }
+        
+                        // compte les cases dans cette direction
+                        while (
+                            r >= 0 && r < numRows &&
+                            c >= 0 && c < numCols &&
+                            grid[r][c].owner === playerKey
+                        ) {
+                            count++;
+                            r += dy;
+                            c += dx;
+                        }
+        
+                        // clé d’un alignement unique
+                        const key = `${row},${col},${dx},${dy}`;
+        
+                        if (count >= 5) {
+                            return { won: true };
+                        } else if (count === 4 && !alreadyCounted.has(key)) {
+                            points += 2;
+                            alreadyCounted.add(key);
+                        } else if (count === 3 && !alreadyCounted.has(key)) {
+                            points += 1;
+                            alreadyCounted.add(key);
+                        }
+                    }
+                }
+            }
+        
+            return { points, won: false };
+        },
 
         resetcanBeCheckedCells: (grid) => {
             const updatedGrid = grid.map(row => row.map(cell => {
