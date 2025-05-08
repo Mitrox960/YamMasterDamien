@@ -1,50 +1,53 @@
-// app/components/board/board.component.js
-
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { View, Text, StyleSheet } from 'react-native';
-import PlayerTimer from './timers/player-timer.component'
-import OpponentTimer from './timers/opponent-timer.component'
+import PlayerTimer from './timers/player-timer.component';
+import OpponentTimer from './timers/opponent-timer.component';
 import PlayerDeck from "./decks/player-deck.component";
 import OpponentDeck from "./decks/opponent-deck.component";
 import PlayerScore from "./scores/player-score.component";
 import OpponentScore from "./scores/opponent-score.component";
+import PlayerTokens from "./tokens/player-tokens.component";
+import OpponentTokens from "./tokens/opponent-tokens.component";
 import Choices from "./choices/choices.component";
 import Grid from "./grid/grid.component";
+import { useNavigation } from '@react-navigation/native';
+import { SocketContext } from '../../contexts/socket.context';
 
-const OpponentInfos = () => {
-  return (
-    <View style={styles.opponentInfosContainer}>
-      <Text>Opponent infos</Text>
-    </View>
-  );
-};/*
+const OpponentInfos = () => (
+  <View style={styles.opponentInfosContainer}>
+    <Text>Opponent infos</Text>
+  </View>
+);
 
-const OpponentScore = () => {
-  return (
-    <View style={styles.opponentScoreContainer}>
-      <Text>Score: </Text>
-    </View>
-  );
-};
-*/
-const PlayerInfos = () => {
-  return (
-    <View style={styles.playerInfosContainer}>
-      <Text>Player Infos</Text>
-    </View>
-  );
-};
-/*
-const PlayerScore = () => {
+const PlayerInfos = () => (
+  <View style={styles.playerInfosContainer}>
+    <Text>Player Infos</Text>
+  </View>
+);
 
-  return (
-    <View style={styles.playerScoreContainer}>
-      <Text>PlayerScore</Text>
-    </View>
-  );
-};
-*/
-const Board = ({ gameViewState}) => {
+const Board = () => {
+  const navigation = useNavigation();
+  const socket = useContext(SocketContext);
+
+  useEffect(() => {
+    const handleEnd = (data) => {
+      navigation.navigate('GameSummaryScreen', {
+        winner: data.winner,
+        playerScore: data.playerScore,
+        opponentScore: data.opponentScore,
+        playerTokens: data.playerTokens,
+        opponentTokens: data.opponentTokens,
+        idPlayer: socket.id,
+      });
+    };
+
+    socket.on('game.end', handleEnd);
+
+    return () => {
+      socket.off('game.end', handleEnd);
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={[styles.row, { height: '5%' }]}>
@@ -52,23 +55,29 @@ const Board = ({ gameViewState}) => {
         <View style={styles.opponentTimerScoreContainer}>
           <OpponentTimer />
           <OpponentScore />
+          <OpponentTokens />
         </View>
       </View>
+
       <View style={[styles.row, { height: '25%' }]}>
         <OpponentDeck />
       </View>
+
       <View style={[styles.row, { height: '40%' }]}>
         <Grid />
         <Choices />
       </View>
+
       <View style={[styles.row, { height: '25%' }]}>
         <PlayerDeck />
       </View>
+
       <View style={[styles.row, { height: '5%' }]}>
         <PlayerInfos />
         <View style={styles.playerTimerScoreContainer}>
           <PlayerTimer />
           <PlayerScore />
+          <PlayerTokens />
         </View>
       </View>
     </View>
@@ -105,25 +114,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: "lightgrey"
   },
-  opponentScoreContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deckOpponentContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderColor: "black"
-  },
-  gridContainer: {
-    flex: 7,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderColor: 'black',
-  },
   playerInfosContainer: {
     flex: 7,
     justifyContent: 'center',
@@ -135,12 +125,6 @@ const styles = StyleSheet.create({
   playerTimerScoreContainer: {
     flex: 3,
     flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: "lightgrey"
-  },
-  playerScoreContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: "lightgrey"

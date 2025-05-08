@@ -76,15 +76,17 @@ const ALL_COMBINATIONS = [
 
 const GAME_INIT = {
     gameState: {
-        currentTurn: 'player:1',
-        timer: null,
-        player1Score: 0,
-        player2Score: 0,
-        choices: {},
-        deck: {}
+      currentTurn: 'player:1',
+      timer: null,
+      player1Score: 0,
+      player2Score: 0,
+      player1Tokens: 12,
+      player2Tokens: 12,
+      choices: {},
+      deck: {}
     }
-}
-
+  }
+  
 const GameService = {
 
     init: {
@@ -317,60 +319,53 @@ const GameService = {
         
         checkAlignmentsAndScore(grid, playerKey) {
             const directions = [
-                { x: 1, y: 0 },  // Horizontal
-                { x: 0, y: 1 },  // Vertical
-                { x: 1, y: 1 },  // Diagonale bas droite
-                { x: 1, y: -1 }  // Diagonale haut droite
+                { x: 1, y: 0 },   // horizontal
+                { x: 0, y: 1 },   // vertical
+                { x: 1, y: 1 },   // diagonal \
+                { x: 1, y: -1 }   // diagonal /
             ];
         
             const numRows = grid.length;
             const numCols = grid[0].length;
+            const visited = new Set();
             let points = 0;
-            const alreadyCounted = new Set(); // Pour éviter de recompter les mêmes alignements
         
             for (let row = 0; row < numRows; row++) {
                 for (let col = 0; col < numCols; col++) {
                     if (grid[row][col].owner !== playerKey) continue;
         
                     for (const { x: dx, y: dy } of directions) {
-                        let count = 1;
-                        let r = row + dy;
-                        let c = col + dx;
-        
-                        // on saute si on n’est pas le début de l’alignement
                         const prevR = row - dy;
                         const prevC = col - dx;
                         if (
                             prevR >= 0 && prevR < numRows &&
                             prevC >= 0 && prevC < numCols &&
                             grid[prevR][prevC].owner === playerKey
-                        ) {
-                            continue;
-                        }
+                        ) continue;
         
-                        // compte les cases dans cette direction
+                        let count = 1;
+                        const path = [`${row},${col}`];
+                        let r = row + dy;
+                        let c = col + dx;
+        
                         while (
                             r >= 0 && r < numRows &&
                             c >= 0 && c < numCols &&
                             grid[r][c].owner === playerKey
                         ) {
+                            path.push(`${r},${c}`);
                             count++;
                             r += dy;
                             c += dx;
                         }
         
-                        // clé d’un alignement unique
-                        const key = `${row},${col},${dx},${dy}`;
+                        const key = path.join('|');
+                        if (visited.has(key)) continue;
+                        visited.add(key);
         
-                        if (count >= 5) {
-                            return { won: true };
-                        } else if (count === 4 && !alreadyCounted.has(key)) {
-                            points += 2;
-                            alreadyCounted.add(key);
-                        } else if (count === 3 && !alreadyCounted.has(key)) {
-                            points += 1;
-                            alreadyCounted.add(key);
-                        }
+                        if (count >= 5) return { won: true };
+                        if (count === 4) points += 2;
+                        else if (count === 3) points += 1;
                     }
                 }
             }
