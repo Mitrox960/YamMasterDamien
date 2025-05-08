@@ -59,10 +59,6 @@ const createGame = (player1Socket, player2Socket) => {
   newGame['idGame'] = uniqid();
   newGame['player1Socket'] = player1Socket;
   newGame['player2Socket'] = player2Socket;
-  for (let i = 0; i < 5; i++) {
-    newGame.gameState.grid[0][i].owner = 'player:1';
-  }
-  newGame.gameState.player1Tokens -= 5;
   
   // push game into 'games' global array
   games.push(newGame);
