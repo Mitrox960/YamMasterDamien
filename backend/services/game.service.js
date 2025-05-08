@@ -76,15 +76,17 @@ const ALL_COMBINATIONS = [
 
 const GAME_INIT = {
     gameState: {
-        currentTurn: 'player:1',
-        timer: null,
-        player1Score: 0,
-        player2Score: 0,
-        choices: {},
-        deck: {}
+      currentTurn: 'player:1',
+      timer: null,
+      player1Score: 0,
+      player2Score: 0,
+      player1Tokens: 12,
+      player2Tokens: 12,
+      choices: {},
+      deck: {}
     }
-}
-
+  }
+  
 const GameService = {
 
     init: {
@@ -110,6 +112,14 @@ const GameService = {
         }
     },
 
+    addPointToPlayer(gameState, playerKey, points = 1) {
+        if (playerKey === 'player:1') {
+            gameState.player1Score += points;
+        } else if (playerKey === 'player:2') {
+            gameState.player2Score += points;
+        }
+      },
+      
     send: {
         forPlayer: {
             viewGameState: (playerKey, game) => {
@@ -140,6 +150,20 @@ const GameService = {
                 return { playerTimer: playerTimer, opponentTimer: opponentTimer };
             },
 
+            gameScore: (playerKey, gameState) => {
+                if (playerKey === 'player:1') {
+                  return {
+                    playerScore: gameState.player1Score,
+                    opponentScore: gameState.player2Score
+                  };
+                } else {
+                  return {
+                    playerScore: gameState.player2Score,
+                    opponentScore: gameState.player1Score
+                  };
+                }
+              },
+              
             deckViewState: (playerKey, gameState) => {
                 const deckViewState = {
                     displayPlayerDeck: gameState.currentTurn === playerKey,
@@ -292,6 +316,62 @@ const GameService = {
     },
 
     grid: {
+        
+        checkAlignmentsAndScore(grid, playerKey) {
+            const directions = [
+                { x: 1, y: 0 },   // horizontal
+                { x: 0, y: 1 },   // vertical
+                { x: 1, y: 1 },   // diagonal \
+                { x: 1, y: -1 }   // diagonal /
+            ];
+        
+            const numRows = grid.length;
+            const numCols = grid[0].length;
+            const visited = new Set();
+            let points = 0;
+        
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    if (grid[row][col].owner !== playerKey) continue;
+        
+                    for (const { x: dx, y: dy } of directions) {
+                        const prevR = row - dy;
+                        const prevC = col - dx;
+                        if (
+                            prevR >= 0 && prevR < numRows &&
+                            prevC >= 0 && prevC < numCols &&
+                            grid[prevR][prevC].owner === playerKey
+                        ) continue;
+        
+                        let count = 1;
+                        const path = [`${row},${col}`];
+                        let r = row + dy;
+                        let c = col + dx;
+        
+                        while (
+                            r >= 0 && r < numRows &&
+                            c >= 0 && c < numCols &&
+                            grid[r][c].owner === playerKey
+                        ) {
+                            path.push(`${r},${c}`);
+                            count++;
+                            r += dy;
+                            c += dx;
+                        }
+        
+                        const key = path.join('|');
+                        if (visited.has(key)) continue;
+                        visited.add(key);
+        
+                        if (count >= 5) return { won: true };
+                        if (count === 4) points += 2;
+                        else if (count === 3) points += 1;
+                    }
+                }
+            }
+        
+            return { points, won: false };
+        },
 
         resetcanBeCheckedCells: (grid) => {
             const updatedGrid = grid.map(row => row.map(cell => {
